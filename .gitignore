@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes Virtuais
+venv/
+virtualenv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Arquivos de IDE e Editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos compilados do Pygame ou outros (se houver)
+build/
+dist/
+*.egg-info/
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Arquivos de mapa salvos localmente (se não quiser versioná-los diretamente)
+# Se você quiser que o "cidade_salva.txt" padrão seja parte do repo, não adicione a linha abaixo.
+# cidade_salva.txt

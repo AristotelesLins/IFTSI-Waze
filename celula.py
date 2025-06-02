@@ -1,5 +1,6 @@
 import pygame
 import constantes
+from gerenciador_assets import obter_gerenciador_assets
 
 class Celula:
     def __init__(self, linha, coluna):
@@ -24,7 +25,7 @@ class Celula:
         if self.faz_parte_caminho_sugerido and self.cor_caminho_sugerido:
             return self.cor_caminho_sugerido
 
-        if self._tipo_base == constantes.TIPO_CONSTRUCAO:
+        if self._tipo_base in constantes.TIPOS_ESTRUTURAS:
             return constantes.COR_CONSTRUCAO
         elif self._tipo_base == constantes.TIPO_PARTIDA:
             return constantes.COR_PARTIDA
@@ -36,7 +37,8 @@ class Celula:
             return constantes.COR_RUA
 
     def _determinar_custo_movimento(self):
-        if self._tipo_base == constantes.TIPO_CONSTRUCAO:
+        # Todas as estruturas são obstáculos
+        if self._tipo_base in constantes.TIPOS_ESTRUTURAS:
             return float('inf')
         
         if self._tipo_trafego_evento == constantes.TIPO_RUA_LIVRE:
@@ -56,13 +58,33 @@ class Celula:
         y_pixel = self.linha * constantes.TAMANHO_CELULA
         rect = pygame.Rect(x_pixel, y_pixel, constantes.TAMANHO_CELULA, constantes.TAMANHO_CELULA)
         
-        cor_atual = self._determinar_cor()
-        pygame.draw.rect(tela, cor_atual, rect)
+        # Verificar se é uma estrutura com imagem
+        if self._tipo_base in constantes.ESTRUTURAS_IMAGENS:
+            gerenciador = obter_gerenciador_assets()
+            if gerenciador:
+                imagem = gerenciador.obter_imagem_estrutura(self._tipo_base)
+                if imagem:
+                    tela.blit(imagem, (x_pixel, y_pixel))
+                else:
+                    # Se não tem imagem, usa cor padrão
+                    cor_atual = self._determinar_cor()
+                    pygame.draw.rect(tela, cor_atual, rect)
+            else:
+                # Se não tem gerenciador, usa cor padrão
+                cor_atual = self._determinar_cor()
+                pygame.draw.rect(tela, cor_atual, rect)
+        else:
+            # Desenho normal para outros tipos
+            cor_atual = self._determinar_cor()
+            pygame.draw.rect(tela, cor_atual, rect)
+        
+        # Borda da célula
         pygame.draw.rect(tela, constantes.CINZA_ESCURO, rect, 1)
 
     def definir_tipo_base(self, novo_tipo_base):
         self._tipo_base = novo_tipo_base
-        if self._tipo_base == constantes.TIPO_CONSTRUCAO:
+        # Estruturas limpam eventos de tráfego
+        if self._tipo_base in constantes.TIPOS_ESTRUTURAS:
             self._tipo_trafego_evento = constantes.TIPO_RUA_LIVRE 
         self.atualizar_estado()
 
@@ -81,7 +103,7 @@ class Celula:
         self.cor = self._determinar_cor()
 
     def eh_obstaculo(self):
-        return self._tipo_base == constantes.TIPO_CONSTRUCAO or \
+        return self._tipo_base in constantes.TIPOS_ESTRUTURAS or \
                self._tipo_trafego_evento == constantes.TIPO_RUA_ACIDENTE
 
     def eh_navegavel(self):

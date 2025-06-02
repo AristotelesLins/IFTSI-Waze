@@ -1,4 +1,3 @@
-# main.py
 import pygame
 import sys
 import random
@@ -12,6 +11,7 @@ from carro import Carro
 from eventos_trafego import GerenciadorEventos
 from ui import PainelUI
 from menu_moderno import MenuModerno
+from gerenciador_assets import inicializar_gerenciador_assets, obter_gerenciador_assets
 
 mapa_jogo = None
 pathfinder = None
@@ -28,6 +28,16 @@ altura_mapa_para_ui = 0
 tipo_pincel_atual_editor = constantes.PINCEL_RUA
 trafego_ativo_simulacao = False
 
+def obter_nome_pincel(tipo_pincel):
+    """Retorna o nome do pincel atual para exibição na UI"""
+    if tipo_pincel == constantes.PINCEL_RUA:
+        return "Rua"
+    elif tipo_pincel == constantes.PINCEL_REMOVER_EVENTO:
+        return "Remover Evento"
+    elif tipo_pincel in constantes.NOMES_ESTRUTURAS:
+        return constantes.NOMES_ESTRUTURAS[tipo_pincel]
+    else:
+        return "Desconhecido"
 
 def desenhar_menu(tela, fonte_titulo, fonte_botao, itens_menu, item_selecionado_idx=None):
     tela.fill(constantes.COR_PAINEL_UI)
@@ -59,7 +69,6 @@ def inicializar_componentes_comuns_jogo():
     altura_mapa_real = mapa_jogo.num_linhas * constantes.TAMANHO_CELULA
     painel_ui_jogo = PainelUI(largura_mapa_real, constantes.ALTURA_PAINEL_UI, altura_mapa_real)
 
-
 def iniciar_modo_editor():
     global estado_atual_jogo, tipo_pincel_atual_editor, mapa_jogo
     mapa_jogo = Mapa(constantes.NUM_LINHAS_MAPA_PADRAO, constantes.NUM_COLUNAS_MAPA_PADRAO)
@@ -67,7 +76,8 @@ def iniciar_modo_editor():
     
     estado_atual_jogo = constantes.ESTADO_MODO_EDITOR
     tipo_pincel_atual_editor = constantes.PINCEL_RUA
-    painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: Rua")
+    nome_pincel = obter_nome_pincel(tipo_pincel_atual_editor)
+    painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {nome_pincel}")
     painel_ui_jogo.definir_notificacao_geral("Modo Editor: Desenhe seu mapa!")
     painel_ui_jogo.definir_notificacao_caminho("S: Salvar | L: Carregar | Enter: Jogar | Esc: Menu")
 
@@ -81,7 +91,8 @@ def carregar_e_editar_mapa(nome_arquivo):
         inicializar_componentes_comuns_jogo()
         estado_atual_jogo = constantes.ESTADO_MODO_EDITOR
         tipo_pincel_atual_editor = constantes.PINCEL_RUA
-        painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: Rua")
+        nome_pincel = obter_nome_pincel(tipo_pincel_atual_editor)
+        painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {nome_pincel}")
         painel_ui_jogo.definir_notificacao_geral(f"Editando: {nome_arquivo}")
         painel_ui_jogo.definir_notificacao_caminho("S: Salvar | L: Carregar | Enter: Jogar | Esc: Menu")
         
@@ -166,6 +177,9 @@ def main_game_loop():
     global largura_tela_atual, altura_tela_atual, altura_mapa_para_ui
 
     pygame.init()
+    
+    # Inicializar o gerenciador de assets
+    inicializar_gerenciador_assets()
 
     menu_moderno = MenuModerno()
 
@@ -227,16 +241,39 @@ def main_game_loop():
                         caminho_sugerido_atual = []
                         continue
                     
+                    # Controles de pincel básicos
                     if evento.key == pygame.K_r:
                         tipo_pincel_atual_editor = constantes.PINCEL_RUA
-                        painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Rua")
                     elif evento.key == pygame.K_c:
                         tipo_pincel_atual_editor = constantes.PINCEL_CONSTRUCAO
-                        painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Construção")
                     elif evento.key == pygame.K_x:
                         tipo_pincel_atual_editor = constantes.PINCEL_REMOVER_EVENTO
-                        painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Remover Evento")
-                    elif evento.key == pygame.K_s:
+                    # Controles de estruturas com números
+                    elif evento.key == pygame.K_1:
+                        tipo_pincel_atual_editor = constantes.PINCEL_CASA_GRANDE
+                    elif evento.key == pygame.K_2:
+                        tipo_pincel_atual_editor = constantes.PINCEL_CASA_MARROM
+                    elif evento.key == pygame.K_3:
+                        tipo_pincel_atual_editor = constantes.PINCEL_CASA_PRETA
+                    elif evento.key == pygame.K_4:
+                        tipo_pincel_atual_editor = constantes.PINCEL_DELEGACIA
+                    elif evento.key == pygame.K_5:
+                        tipo_pincel_atual_editor = constantes.PINCEL_ESCOLA
+                    elif evento.key == pygame.K_6:
+                        tipo_pincel_atual_editor = constantes.PINCEL_HOTEL
+                    elif evento.key == pygame.K_7:
+                        tipo_pincel_atual_editor = constantes.PINCEL_IGREJA
+                    elif evento.key == pygame.K_8:
+                        tipo_pincel_atual_editor = constantes.PINCEL_MERCADO
+                    elif evento.key == pygame.K_9:
+                        tipo_pincel_atual_editor = constantes.PINCEL_PREDIO
+                    
+                    # Atualizar UI com o nome do pincel
+                    nome_pincel = obter_nome_pincel(tipo_pincel_atual_editor)
+                    painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {nome_pincel}")
+                    
+                    # Outros controles
+                    if evento.key == pygame.K_s:
                         if mapa_jogo.salvar_mapa(mapa_salvo_padrao):
                             painel_ui_jogo.definir_notificacao_caminho(f"Mapa salvo como '{mapa_salvo_padrao}'")
                         else:
@@ -277,7 +314,8 @@ def main_game_loop():
                     if evento.key == pygame.K_ESCAPE:
                         estado_atual_jogo = constantes.ESTADO_MODO_EDITOR
                         trafego_ativo_simulacao = False
-                        painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {tipo_pincel_atual_editor}")
+                        nome_pincel = obter_nome_pincel(tipo_pincel_atual_editor)
+                        painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {nome_pincel}")
                         painel_ui_jogo.definir_notificacao_geral("Modo Editor: Retomado.")
                         painel_ui_jogo.definir_notificacao_caminho("S: Salvar | L: Carregar | Enter: Jogar | Esc: Menu")
                         if mapa_jogo.ponto_partida:
@@ -313,7 +351,8 @@ def main_game_loop():
             if painel_ui_jogo:
                 painel_ui_jogo = PainelUI(largura_tela_atual, constantes.ALTURA_PAINEL_UI, altura_mapa_para_ui)
                 if estado_atual_jogo == constantes.ESTADO_MODO_EDITOR:
-                    painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {tipo_pincel_atual_editor}")
+                    nome_pincel = obter_nome_pincel(tipo_pincel_atual_editor)
+                    painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {nome_pincel}")
                     painel_ui_jogo.definir_notificacao_geral(f"Editando: {mapa_salvo_padrao}")
             precisa_recriar_tela = False
 

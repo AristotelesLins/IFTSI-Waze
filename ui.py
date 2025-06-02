@@ -1,4 +1,3 @@
-# ui.py
 import pygame
 import constantes
 
@@ -41,7 +40,7 @@ class PainelUI:
         self.superficie.blit(texto_linha2, (10, 10 + constantes.TAMANHO_FONTE_UI_PADRAO + 5))
         
         if modo_editor_ativo:
-            instrucoes = "Pincel: [R]ua [C]onst [X]Rem.Evento | S/L: Mapa | Enter: Jogar | Esc: Sair"
+            instrucoes = "Estruturas: [1-9] | [R]ua [C]onst [X]Rem.Evento | S/L: Mapa | Enter: Jogar | Esc: Sair"
         else:
             instrucoes = "Setas: Mover | R: Recalc. Rota | Espaço: Parar | Esc: Sair"
 

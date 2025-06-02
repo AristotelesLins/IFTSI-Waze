@@ -11,6 +11,7 @@ from pathfinder import Pathfinder
 from carro import Carro
 from eventos_trafego import GerenciadorEventos
 from ui import PainelUI
+from menu_moderno import MenuModerno
 
 mapa_jogo = None
 pathfinder = None
@@ -163,8 +164,10 @@ def main_game_loop():
     global rodando_aplicacao, estado_atual_jogo, tipo_pincel_atual_editor, trafego_ativo_simulacao
     global mapa_jogo, painel_ui_jogo, carro_jogador, caminho_sugerido_atual
     global largura_tela_atual, altura_tela_atual, altura_mapa_para_ui
-    
+
     pygame.init()
+
+    menu_moderno = MenuModerno()
 
     largura_tela_atual = constantes.LARGURA_TELA
     altura_tela_atual = constantes.ALTURA_TELA
@@ -184,48 +187,62 @@ def main_game_loop():
         mouse_pos = pygame.mouse.get_pos()
         precisa_recriar_tela = False
 
+        # Atualizar menu moderno se estivermos no estado inicial
+        if estado_atual_jogo == constantes.ESTADO_MENU_INICIAL:
+            menu_moderno.atualizar(mouse_pos)
+
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                rodando_aplicacao = False; estado_atual_jogo = constantes.ESTADO_SAINDO
+                rodando_aplicacao = False
+                estado_atual_jogo = constantes.ESTADO_SAINDO
 
             if estado_atual_jogo == constantes.ESTADO_MENU_INICIAL:
-                itens_menu_principal = [
-                    ("Criar Novo Mapa", lambda: iniciar_modo_editor()),
-                    (f"Carregar '{mapa_salvo_padrao}'", lambda: carregar_e_editar_mapa(mapa_salvo_padrao)),
-                    ("Sair", lambda: globals().update(rodando_aplicacao=False, estado_atual_jogo=constantes.ESTADO_SAINDO))
-                ]
-                botoes_menu_rects = desenhar_menu(tela, fonte_titulo_menu, fonte_botao_menu, 
-                                                 [(txt, None) for txt, _ in itens_menu_principal])
-
-
                 if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-                    for i, rect in enumerate(botoes_menu_rects):
-                        if rect.collidepoint(mouse_pos):
-                            acao_resultado = itens_menu_principal[i][1]()
-                            if acao_resultado is True:
-                                precisa_recriar_tela = True
-                            break 
+                    botao_clicado = menu_moderno.processar_clique(mouse_pos)
+                    
+                    if botao_clicado == 0:  # Criar Novo Mapa
+                        iniciar_modo_editor()
+                    elif botao_clicado == 1:  # Carregar mapa
+                        if carregar_e_editar_mapa(mapa_salvo_padrao):
+                            precisa_recriar_tela = True
+                    elif botao_clicado == 2:  # Sair
+                        rodando_aplicacao = False
+                        estado_atual_jogo = constantes.ESTADO_SAINDO
+                        
                 if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
-                     rodando_aplicacao = False; estado_atual_jogo = constantes.ESTADO_SAINDO
+                    rodando_aplicacao = False
+                    estado_atual_jogo = constantes.ESTADO_SAINDO
             
             elif estado_atual_jogo == constantes.ESTADO_MODO_EDITOR:
                 if not mapa_jogo or not painel_ui_jogo:
-                    estado_atual_jogo = constantes.ESTADO_MENU_INICIAL; continue
+                    estado_atual_jogo = constantes.ESTADO_MENU_INICIAL
+                    continue
 
                 if evento.type == pygame.KEYDOWN:
                     if evento.key == pygame.K_ESCAPE:
                         estado_atual_jogo = constantes.ESTADO_MENU_INICIAL
-                        mapa_jogo = None; painel_ui_jogo = None; carro_jogador = None; caminho_sugerido_atual = []
+                        mapa_jogo = None
+                        painel_ui_jogo = None
+                        carro_jogador = None
+                        caminho_sugerido_atual = []
                         continue
                     
-                    if evento.key == pygame.K_r: tipo_pincel_atual_editor = constantes.PINCEL_RUA; painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Rua")
-                    elif evento.key == pygame.K_c: tipo_pincel_atual_editor = constantes.PINCEL_CONSTRUCAO; painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Construção")
-                    elif evento.key == pygame.K_x: tipo_pincel_atual_editor = constantes.PINCEL_REMOVER_EVENTO; painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Remover Evento")
+                    if evento.key == pygame.K_r:
+                        tipo_pincel_atual_editor = constantes.PINCEL_RUA
+                        painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Rua")
+                    elif evento.key == pygame.K_c:
+                        tipo_pincel_atual_editor = constantes.PINCEL_CONSTRUCAO
+                        painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Construção")
+                    elif evento.key == pygame.K_x:
+                        tipo_pincel_atual_editor = constantes.PINCEL_REMOVER_EVENTO
+                        painel_ui_jogo.definir_estado_pincel("Editor - Pincel: Remover Evento")
                     elif evento.key == pygame.K_s:
-                        if mapa_jogo.salvar_mapa(mapa_salvo_padrao): painel_ui_jogo.definir_notificacao_caminho(f"Mapa salvo como '{mapa_salvo_padrao}'")
-                        else: painel_ui_jogo.definir_notificacao_caminho("Erro ao salvar.")
+                        if mapa_jogo.salvar_mapa(mapa_salvo_padrao):
+                            painel_ui_jogo.definir_notificacao_caminho(f"Mapa salvo como '{mapa_salvo_padrao}'")
+                        else:
+                            painel_ui_jogo.definir_notificacao_caminho("Erro ao salvar.")
                     elif evento.key == pygame.K_l:
-                        if carregar_e_editar_mapa(mapa_salvo_padrao) is True:
+                        if carregar_e_editar_mapa(mapa_salvo_padrao):
                             precisa_recriar_tela = True
                     elif evento.key == pygame.K_RETURN:
                         iniciar_simulacao_do_editor()
@@ -243,15 +260,18 @@ def main_game_loop():
             
             elif estado_atual_jogo == constantes.ESTADO_SIMULACAO:
                 if not carro_jogador or not painel_ui_jogo or not gerenciador_eventos or not pathfinder or not mapa_jogo:
-                    estado_atual_jogo = constantes.ESTADO_MENU_INICIAL; continue
+                    estado_atual_jogo = constantes.ESTADO_MENU_INICIAL
+                    continue
 
                 if evento.type == constantes.EVENTO_ATUALIZAR_TRAFEGO and trafego_ativo_simulacao:
                     gerenciador_eventos.simular_eventos_aleatorios()
                     not_ev = gerenciador_eventos.obter_ultima_notificacao_evento()
-                    if not_ev and ("EVENTO:" not in painel_ui_jogo.ultima_notificacao_caminho or not_ev not in painel_ui_jogo.ultima_notificacao_caminho) :
+                    if not_ev and ("EVENTO:" not in painel_ui_jogo.ultima_notificacao_caminho or not_ev not in painel_ui_jogo.ultima_notificacao_caminho):
                         painel_ui_jogo.definir_notificacao_caminho(f"EVENTO: {not_ev} (Rota recalculada)")
-                    else: recalcular_e_mostrar_caminho_simulacao()
-                    if not_ev: recalcular_e_mostrar_caminho_simulacao()
+                    else:
+                        recalcular_e_mostrar_caminho_simulacao()
+                    if not_ev:
+                        recalcular_e_mostrar_caminho_simulacao()
 
                 if evento.type == pygame.KEYDOWN:
                     if evento.key == pygame.K_ESCAPE:
@@ -261,22 +281,29 @@ def main_game_loop():
                         painel_ui_jogo.definir_notificacao_geral("Modo Editor: Retomado.")
                         painel_ui_jogo.definir_notificacao_caminho("S: Salvar | L: Carregar | Enter: Jogar | Esc: Menu")
                         if mapa_jogo.ponto_partida:
-                            mapa_jogo.obter_celula(mapa_jogo.ponto_partida[0],mapa_jogo.ponto_partida[1]).definir_tipo_base(constantes.TIPO_RUA)
+                            mapa_jogo.obter_celula(mapa_jogo.ponto_partida[0], mapa_jogo.ponto_partida[1]).definir_tipo_base(constantes.TIPO_RUA)
                             mapa_jogo.ponto_partida = None
                         if mapa_jogo.ponto_chegada:
-                            mapa_jogo.obter_celula(mapa_jogo.ponto_chegada[0],mapa_jogo.ponto_chegada[1]).definir_tipo_base(constantes.TIPO_RUA)
+                            mapa_jogo.obter_celula(mapa_jogo.ponto_chegada[0], mapa_jogo.ponto_chegada[1]).definir_tipo_base(constantes.TIPO_RUA)
                             mapa_jogo.ponto_chegada = None
                         mapa_jogo.limpar_visualizacao_caminho_sugerido()
                         carro_jogador = None
                         continue
                     
                     if trafego_ativo_simulacao:
-                        if evento.key == pygame.K_UP: carro_jogador.definir_proxima_direcao(constantes.DIRECAO_CIMA)
-                        elif evento.key == pygame.K_DOWN: carro_jogador.definir_proxima_direcao(constantes.DIRECAO_BAIXO)
-                        elif evento.key == pygame.K_LEFT: carro_jogador.definir_proxima_direcao(constantes.DIRECAO_ESQUERDA)
-                        elif evento.key == pygame.K_RIGHT: carro_jogador.definir_proxima_direcao(constantes.DIRECAO_DIREITA)
-                        elif evento.key == pygame.K_SPACE: carro_jogador.parar_movimento_automatico(); painel_ui_jogo.definir_notificacao_geral("Carro parado.")
-                    if evento.key == pygame.K_r: recalcular_e_mostrar_caminho_simulacao()
+                        if evento.key == pygame.K_UP:
+                            carro_jogador.definir_proxima_direcao(constantes.DIRECAO_CIMA)
+                        elif evento.key == pygame.K_DOWN:
+                            carro_jogador.definir_proxima_direcao(constantes.DIRECAO_BAIXO)
+                        elif evento.key == pygame.K_LEFT:
+                            carro_jogador.definir_proxima_direcao(constantes.DIRECAO_ESQUERDA)
+                        elif evento.key == pygame.K_RIGHT:
+                            carro_jogador.definir_proxima_direcao(constantes.DIRECAO_DIREITA)
+                        elif evento.key == pygame.K_SPACE:
+                            carro_jogador.parar_movimento_automatico()
+                            painel_ui_jogo.definir_notificacao_geral("Carro parado.")
+                    if evento.key == pygame.K_r:
+                        recalcular_e_mostrar_caminho_simulacao()
 
         if precisa_recriar_tela:
             largura_tela_atual = mapa_jogo.num_colunas * constantes.TAMANHO_CELULA
@@ -286,11 +313,11 @@ def main_game_loop():
             if painel_ui_jogo:
                 painel_ui_jogo = PainelUI(largura_tela_atual, constantes.ALTURA_PAINEL_UI, altura_mapa_para_ui)
                 if estado_atual_jogo == constantes.ESTADO_MODO_EDITOR:
-                     painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {tipo_pincel_atual_editor}")
-                     painel_ui_jogo.definir_notificacao_geral(f"Editando: {mapa_salvo_padrao}")
+                    painel_ui_jogo.definir_estado_pincel(f"Editor - Pincel: {tipo_pincel_atual_editor}")
+                    painel_ui_jogo.definir_notificacao_geral(f"Editando: {mapa_salvo_padrao}")
             precisa_recriar_tela = False
 
-
+        # Atualizar lógica do jogo
         if estado_atual_jogo == constantes.ESTADO_SIMULACAO and carro_jogador and trafego_ativo_simulacao:
             pos_ant = carro_jogador.obter_posicao_atual()
             carro_jogador.atualizar()
@@ -303,24 +330,22 @@ def main_game_loop():
                 trafego_ativo_simulacao = False
                 mapa_jogo.limpar_visualizacao_caminho_sugerido()
 
-        tela.fill(constantes.BRANCO)
+        # Desenhar baseado no estado atual
         if estado_atual_jogo == constantes.ESTADO_MENU_INICIAL:
-            itens_menu_principal = [("Criar Novo Mapa", None), (f"Carregar '{mapa_salvo_padrao}'", None), ("Sair", None)]
-            item_hover_idx = -1
-            botoes_menu_rects = desenhar_menu(tela, fonte_titulo_menu, fonte_botao_menu, itens_menu_principal)
-            for i, rect in enumerate(botoes_menu_rects):
-                if rect.collidepoint(mouse_pos): item_hover_idx = i; break
-            desenhar_menu(tela, fonte_titulo_menu, fonte_botao_menu, itens_menu_principal, item_hover_idx)
+            menu_moderno.desenhar(tela)
         elif estado_atual_jogo == constantes.ESTADO_MODO_EDITOR:
             if mapa_jogo and painel_ui_jogo:
+                tela.fill(constantes.BRANCO)
                 mapa_jogo.desenhar(tela)
                 painel_ui_jogo.desenhar(tela, True)
         elif estado_atual_jogo == constantes.ESTADO_SIMULACAO:
-            if mapa_jogo and carro_jogador and painel_ui_jogo:
+            if mapa_jogo and painel_ui_jogo:
+                tela.fill(constantes.BRANCO)
                 mapa_jogo.desenhar(tela)
-                carro_jogador.desenhar(tela)
+                if carro_jogador:
+                    carro_jogador.desenhar(tela)
                 painel_ui_jogo.desenhar(tela, False)
-        
+
         pygame.display.flip()
         relogio.tick(constantes.FPS)
 

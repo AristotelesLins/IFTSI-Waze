@@ -93,3 +93,25 @@ ESTADO_MENU_INICIAL = 0
 ESTADO_MODO_EDITOR = 1
 ESTADO_SIMULACAO = 2
 ESTADO_SAINDO = 3
+
+# Cores para interface
+COR_FUNDO_MENU = (25, 30, 45)           # Azul escuro 
+COR_FUNDO_GRADIENTE_1 = (35, 45, 65)    # Gradiente início
+COR_FUNDO_GRADIENTE_2 = (15, 25, 40)    # Gradiente fim
+COR_TITULO_PRINCIPAL = (255, 255, 255)  # Branco para título
+COR_TITULO_SOMBRA = (100, 120, 150)     # Sombra do título
+COR_BOTAO_NORMAL = (70, 130, 180)       # Azul 
+COR_BOTAO_HOVER = (100, 160, 220)       # Azul claro no hover
+COR_BOTAO_TEXTO = (255, 255, 255)       # Texto branco
+COR_BOTAO_BORDA = (50, 100, 150)        # Borda dos botões
+COR_DESTAQUE = (255, 215, 0)            # Dourado para destaques
+COR_ICONE = (180, 200, 255)             # Azul claro para ícones
+
+# Tamanhos para interface 
+TAMANHO_TITULO_PRINCIPAL = 72
+TAMANHO_SUBTITULO = 24
+TAMANHO_TEXTO_BOTAO = 20
+ESPACO_ENTRE_BOTOES = 20
+LARGURA_BOTAO = 300
+ALTURA_BOTAO = 60
+RAIO_BORDA_BOTAO = 15

@@ -1,9 +1,9 @@
 import pygame
 
 # Dimensões do Grid e Célula - AUMENTADAS
-NUM_LINHAS_MAPA_PADRAO = 35  # Era 25, agora 35
-NUM_COLUNAS_MAPA_PADRAO = 60  # Era 40, agora 60
-TAMANHO_CELULA = 27  # Era 20, agora 25
+NUM_LINHAS_MAPA_PADRAO = 20  # Era 25, agora 35
+NUM_COLUNAS_MAPA_PADRAO = 43  # Era 40, agora 60
+TAMANHO_CELULA = 44  # Era 20, agora 25
 
 # Cores (formato RGB)
 BRANCO = (255, 255, 255)
@@ -13,8 +13,8 @@ CINZA_ESCURO = (160, 160, 160)
 
 COR_RUA = (220, 220, 220)
 COR_CONSTRUCAO = (100, 100, 100)
-COR_PARTIDA = (0, 200, 0)
-COR_CHEGADA = (200, 0, 0)
+COR_PARTIDA = (0, 0, 0)
+COR_CHEGADA = (64, 224, 208)
 COR_CARRO = (50, 50, 200)
 
 # Cores para o caminho sugerido e tráfego
